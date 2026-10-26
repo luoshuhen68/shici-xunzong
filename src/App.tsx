@@ -3,6 +3,7 @@ import BgScene from './components/BgScene'
 import GuideModal from './components/GuideModal'
 import HomeScreen from './components/HomeScreen'
 import GameScreen from './components/GameScreen'
+import LibraryScreen from './components/LibraryScreen'
 import {
   ACHIEVEMENTS,
   buildLevels,
@@ -25,7 +26,7 @@ const LEVELS = buildLevels()
 
 export default function App() {
   const [progress, setProgress] = useState<Progress>(() => loadProgress())
-  const [screen, setScreen] = useState<'home' | 'game'>('home')
+  const [screen, setScreen] = useState<'home' | 'game' | 'library'>('home')
   const [levelIdx, setLevelIdx] = useState(0)
   const [toasts, setToasts] = useState<Toast[]>([])
   const [showGuide, setShowGuide] = useState(() => !loadProgress().guideSeen)
@@ -40,19 +41,20 @@ export default function App() {
     saveProgress(p)
   }, [])
 
-  /** 通关：更新进度、解锁下一关、结算成就并弹窗提示 */
+  /** 通关或跳过：更新进度、解锁下一关、结算成就并弹窗提示 */
   const handleLevelComplete = useCallback(
-    (level: Level, result: { score: number; stars: 1 | 2 | 3; perfect: boolean }) => {
+    (level: Level, result: { score: number; stars: 0 | 1 | 2 | 3; perfect: boolean; skipped: boolean }) => {
       const qid = level.question.id
       const old = progress.levels[qid]
       const levels = {
         ...progress.levels,
         [qid]: {
-          stars: Math.max(old?.stars ?? 0, result.stars) as 1 | 2 | 3,
+          stars: Math.max(old?.stars ?? 0, result.stars) as 0 | 1 | 2 | 3,
           score: Math.max(old?.score ?? 0, result.score),
         },
       }
-      const streak = progress.streak + 1
+      // 跳过不得分、连胜清零；正常通关连胜 +1
+      const streak = result.skipped ? 0 : progress.streak + 1
       // 只提示尚未获得的成就，避免重复弹窗
       const gained = evaluateAchievements(LEVELS, levels, streak, result.perfect).filter(
         (id) => !progress.achievements.includes(id),
@@ -124,17 +126,9 @@ export default function App() {
   return (
     <div className="app-root">
       <BgScene />
-      {screen === 'home' ? (
-        <HomeScreen
-          levels={LEVELS}
-          progress={progress}
-          onPlay={startLevel}
-          onContinue={continueGame}
-          onReset={resetProgress}
-          onShowGuide={() => setShowGuide(true)}
-          onToggleSound={toggleSound}
-        />
-      ) : (
+      {screen === 'library' ? (
+        <LibraryScreen onBack={() => setScreen('home')} />
+      ) : screen === 'game' ? (
         <GameScreen
           key={levelIdx}
           level={LEVELS[levelIdx]}
@@ -144,6 +138,17 @@ export default function App() {
           onNext={nextLevel}
           onLevelComplete={handleLevelComplete}
           onToggleSound={toggleSound}
+        />
+      ) : (
+        <HomeScreen
+          levels={LEVELS}
+          progress={progress}
+          onPlay={startLevel}
+          onContinue={continueGame}
+          onReset={resetProgress}
+          onShowGuide={() => setShowGuide(true)}
+          onToggleSound={toggleSound}
+          onLibrary={() => setScreen('library')}
         />
       )}
 

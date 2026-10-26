@@ -1,4 +1,4 @@
-import type { Achievement, Chapter, Difficulty, Progress, Question } from '../types'
+import type { Achievement, Chapter, Difficulty, LevelRecord, Progress, Question } from '../types'
 import { CHAPTERS, QUESTIONS } from '../data/poems'
 
 // ────────────────────────────── 题目校验 ──────────────────────────────
@@ -134,7 +134,8 @@ export interface LevelResult {
   streakBonus: number
   perfectBonus: number
   score: number
-  stars: 1 | 2 | 3
+  /** 星级（0 表示跳过本关） */
+  stars: 0 | 1 | 2 | 3
 }
 
 export function computeResult(
@@ -174,7 +175,7 @@ export const ACHIEVEMENTS: Achievement[] = [
 /** 根据通关结果计算新获得的成就 */
 export function evaluateAchievements(
   levels: Level[],
-  cleared: Record<string, { stars: 1 | 2 | 3; score: number }>,
+  cleared: Record<string, LevelRecord>,
   streak: number,
   justPerfect: boolean,
 ): string[] {

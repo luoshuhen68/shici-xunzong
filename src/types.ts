@@ -56,7 +56,8 @@ export interface Chapter {
 
 /** 单关卡的存档记录 */
 export interface LevelRecord {
-  stars: 1 | 2 | 3
+  /** 星级（0 表示跳过） */
+  stars: 0 | 1 | 2 | 3
   score: number
 }
 

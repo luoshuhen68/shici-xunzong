@@ -25,7 +25,7 @@ interface Props {
   progress: Progress
   onBack: () => void
   onNext: () => void
-  onLevelComplete: (level: Level, result: { score: number; stars: 1 | 2 | 3; perfect: boolean }) => void
+  onLevelComplete: (level: Level, result: { score: number; stars: 0 | 1 | 2 | 3; perfect: boolean; skipped: boolean }) => void
   onToggleSound: () => void
 }
 
@@ -55,6 +55,7 @@ export default function GameScreen({
   const [result, setResult] = useState<LevelResult | null>(null)
   const [modalOpen, setModalOpen] = useState(false)
   const [burst, setBurst] = useState(0)
+  const [skipped, setSkipped] = useState(false)
   const hintTimer = useRef<number | undefined>(undefined)
 
   useEffect(
@@ -129,7 +130,7 @@ export default function GameScreen({
       setModalOpen(true)
       setBurst((b) => b + 1)
       sfx.correct()
-      onLevelComplete(level, { score: r.score, stars: r.stars, perfect })
+      onLevelComplete(level, { score: r.score, stars: r.stars, perfect, skipped: false })
     } else {
       const chars2 = selectedRef.current.map((idx) => q.tiles[idx])
       const hit = chars2.filter((c, idx) => c === q.answer[idx]).length
@@ -161,6 +162,52 @@ export default function GameScreen({
       if (hintTimer.current) window.clearTimeout(hintTimer.current)
       hintTimer.current = window.setTimeout(() => setHintTile(null), 3500)
     }
+  }
+
+  // ── 跳过关卡：亮出答案，本关不计分 ──
+  const skipLevel = () => {
+    if (phase !== 'selecting') return
+    if (
+      !window.confirm(
+        '确定跳过本关吗？\n\n· 本关不得分、无星级\n· 当前连胜将清零\n· 之后可在本关「再挑战」赢回分数',
+      )
+    )
+      return
+    // 按答案字序亮出对应方块，便于对照学习
+    const used = new Set<number>()
+    const idxs: number[] = []
+    let ok = true
+    for (const ch of q.answer) {
+      const i = q.tiles.findIndex((t, k) => t === ch && !used.has(k))
+      if (i < 0) {
+        ok = false
+        break
+      }
+      used.add(i)
+      idxs.push(i)
+    }
+    if (ok) applySelection(idxs)
+    setSkipped(true)
+    setResult({ base: 0, hintPenalty: 0, streakBonus: 0, perfectBonus: 0, score: 0, stars: 0 })
+    setPhase('solved')
+    setModalOpen(true)
+    setNotice(null)
+    sfx.deselect()
+    onLevelComplete(level, { score: 0, stars: 0, perfect: false, skipped: true })
+  }
+
+  // ── 跳过后再挑战：重置本关状态（存档里的 0 星记录会被新成绩覆盖） ──
+  const retry = () => {
+    setModalOpen(false)
+    setSkipped(false)
+    setResult(null)
+    setAttempts(0)
+    setHintsUsed(0)
+    setHintTile(null)
+    setWrongOpt(null)
+    setNotice(null)
+    applySelection([])
+    setPhase(needTitlePick ? 'title-pick' : 'selecting')
   }
 
   const isSuccess = phase === 'solved'
@@ -296,6 +343,9 @@ export default function GameScreen({
         <button className="btn ghost" onClick={reset} disabled={phase !== 'selecting' || selected.length === 0}>
           重选
         </button>
+        <button className="btn ghost" onClick={skipLevel} disabled={phase !== 'selecting'} title="跳过本关，不计分">
+          跳过
+        </button>
         <button
           className="btn primary"
           onClick={isSuccess ? onNext : submit}
@@ -309,9 +359,11 @@ export default function GameScreen({
         <ResultModal
           question={q}
           result={result}
-          perfect={attempts === 0 && hintsUsed === 0}
+          perfect={attempts === 0 && hintsUsed === 0 && !skipped}
+          skipped={skipped}
           hasNext={hasNext}
           onClose={() => setModalOpen(false)}
+          onRetry={retry}
           onNext={onNext}
         />
       )}

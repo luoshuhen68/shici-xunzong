@@ -11,6 +11,7 @@ interface Props {
   onReset: () => void
   onShowGuide: () => void
   onToggleSound: () => void
+  onLibrary: () => void
 }
 
 function starIcons(n: number): string {
@@ -25,6 +26,7 @@ export default function HomeScreen({
   onReset,
   onShowGuide,
   onToggleSound,
+  onLibrary,
 }: Props) {
   const clearedCount = Object.keys(progress.levels).length
   const totalStars = Object.values(progress.levels).reduce((s, r) => s + r.stars, 0)
@@ -82,6 +84,9 @@ export default function HomeScreen({
       <div className="home-cta">
         <button className="btn primary big" onClick={onContinue}>
           {hasProgress ? '继续寻踪' : '启程 · 诗词寻踪之旅'}
+        </button>
+        <button className="btn ghost big" onClick={onLibrary} title="查阅全部诗词全文">
+          诗词库
         </button>
       </div>
 

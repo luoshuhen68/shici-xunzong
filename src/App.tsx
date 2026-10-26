@@ -53,12 +53,14 @@ export default function App() {
           score: Math.max(old?.score ?? 0, result.score),
         },
       }
-      // 跳过不得分、连胜清零；正常通关连胜 +1
+      // 跳过不得分、连胜清零、不结算任何成就；正常通关连胜 +1
       const streak = result.skipped ? 0 : progress.streak + 1
       // 只提示尚未获得的成就，避免重复弹窗
-      const gained = evaluateAchievements(LEVELS, levels, streak, result.perfect).filter(
-        (id) => !progress.achievements.includes(id),
-      )
+      const gained = result.skipped
+        ? []
+        : evaluateAchievements(LEVELS, levels, streak, result.perfect).filter(
+            (id) => !progress.achievements.includes(id),
+          )
       const next: Progress = {
         ...progress,
         levels,

@@ -155,7 +155,10 @@ button:disabled { cursor: not-allowed; }
 }
 
 /* ─────────────────────────── 诗词库 ─────────────────────────── */
-.library-screen { max-width: 720px; margin: 0 auto; padding: 18px 16px 40px; }
+.library-screen {
+  position: relative; z-index: 1;
+  max-width: 720px; margin: 0 auto; padding: 18px 16px 40px;
+}
 .lib-header { display: flex; align-items: center; gap: 14px; margin-bottom: 16px; }
 .lib-head-text { flex: 1; }
 .lib-title { font-family: var(--kai); font-size: 26px; letter-spacing: 8px; color: var(--jin-bright); }

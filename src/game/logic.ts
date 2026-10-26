@@ -192,12 +192,14 @@ export function evaluateAchievements(
   if (streak >= 3) grant('streak-3')
   if (streak >= 5) grant('streak-5')
   if (justPerfect) grant('perfect')
+  // 跳过（0 星）的关卡不计入章节/全通关成就，需真正通关
+  const done = (id: string) => (cleared[id]?.stars ?? 0) > 0
   for (const ch of CHAPTERS) {
     const ids = levels.filter((l) => l.chapter.id === ch.id).map((l) => l.question.id)
-    if (ids.length > 0 && ids.every((id) => clearedIds.has(id))) grant(`chapter-${ch.id}`)
+    if (ids.length > 0 && ids.every(done)) grant(`chapter-${ch.id}`)
   }
   const levelIds = levels.map((l) => l.question.id)
-  if (levelIds.length > 0 && levelIds.every((id) => clearedIds.has(id))) grant('all-clear')
+  if (levelIds.length > 0 && levelIds.every(done)) grant('all-clear')
   if (
     levelIds.length > 0 &&
     levelIds.every((id) => clearedIds.has(id) && cleared[id].stars === 3)

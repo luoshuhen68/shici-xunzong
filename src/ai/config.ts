@@ -8,7 +8,7 @@
  *   https://shici-poet-api.your-subdomain.workers.dev
  * 地址中仍含尖括号时视为未配置，游戏会自动降级为离线诗笺模式。
  */
-export const AI_ENDPOINT = 'https://shici-poet-api.<你的子域>.workers.dev'
+export const AI_ENDPOINT = 'https://shici-poet-api.luoshuhen68.workers.dev'
 
 /** 是否已配置可用的代理地址 */
 export function isAiConfigured(): boolean {

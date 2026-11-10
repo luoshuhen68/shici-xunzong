@@ -10,6 +10,7 @@ import type { LevelResult } from '../game/logic'
 import type { Progress } from '../types'
 import { sfx } from '../game/audio'
 import ResultModal from './ResultModal'
+import PoetChat from './PoetChat'
 
 const MAX_HINTS = 2
 
@@ -56,6 +57,7 @@ export default function GameScreen({
   const [modalOpen, setModalOpen] = useState(false)
   const [burst, setBurst] = useState(0)
   const [skipped, setSkipped] = useState(false)
+  const [chatOpen, setChatOpen] = useState(false)
   const hintTimer = useRef<number | undefined>(undefined)
 
   useEffect(
@@ -365,8 +367,11 @@ export default function GameScreen({
           onClose={() => setModalOpen(false)}
           onRetry={retry}
           onNext={onNext}
+          onChat={() => setChatOpen(true)}
         />
       )}
+
+      {chatOpen && <PoetChat question={q} onClose={() => setChatOpen(false)} />}
     </div>
   )
 }

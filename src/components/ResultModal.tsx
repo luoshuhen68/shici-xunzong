@@ -12,6 +12,8 @@ interface Props {
   /** 跳过后再挑战：重置本关重新作答 */
   onRetry: () => void
   onNext: () => void
+  /** 与诗人对谈（AI 对话） */
+  onChat: () => void
 }
 
 export default function ResultModal({
@@ -23,6 +25,7 @@ export default function ResultModal({
   onClose,
   onRetry,
   onNext,
+  onChat,
 }: Props) {
   return (
     <div className="modal-mask" onClick={onClose}>
@@ -70,6 +73,9 @@ export default function ResultModal({
         </div>
 
         <div className="result-actions">
+          <button className="btn seal" onClick={onChat} title={`与${question.author}聊聊这首诗`}>
+            与{question.author}对谈
+          </button>
           <button className="btn ghost" onClick={skipped ? onRetry : onClose}>
             {skipped ? '再挑战一次' : '再读一遍'}
           </button>

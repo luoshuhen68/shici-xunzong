@@ -1,0 +1,17 @@
+# 诗词寻踪 · AI 对谈代理（Cloudflare Worker）
+name = "shici-poet-api"
+main = "src/index.js"
+compatibility_date = "2024-11-01"
+
+[vars]
+# 只允许小游戏自己的来源调用，部署后按需增减
+ALLOWED_ORIGINS = "https://luoshuhen68.github.io,http://localhost:5173"
+# 每个 IP 每天最多对谈次数
+DAILY_LIMIT_PER_IP = "40"
+MODEL = "deepseek-chat"
+
+# 建议启用：创建 KV 命名空间后取消下面两行注释
+# npx wrangler kv namespace create RATE
+# [[kv_namespaces]]
+# binding = "RATE"
+# id = "把命令输出的 id 填在这里"

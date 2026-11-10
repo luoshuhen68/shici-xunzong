@@ -65,3 +65,50 @@ shici-xunzong/
 
 - `npm run selftest`：校验全部题目可通关（含重复字关卡「蜀道之难，难于上青天」「十年生死两茫茫」）、提示逻辑、计分公式与成就结算。
 - `npm run build`：TypeScript 严格模式类型检查 + 生产构建。
+
+## AI 诗人对谈（可选）
+
+通关结算后，可点「与{作者}对谈」，让诗人以第一人称回答这首诗的含义、用字与心境。
+
+```
+浏览器（静态站） → Cloudflare Worker 代理 → DeepSeek API
+```
+
+密钥只存在 Worker 里，前端一律不接触。未配置代理时，对话自动降级为「离线诗笺」，直接用题库里的释义与赏析作答，不影响闯关。接口超时或报错时同样降级。
+
+### 部署代理（Cloudflare 控制台，无需本地 Node）
+
+1. 登录 Cloudflare → Workers & Pages → Create → Worker，命名如 `shici-poet-api`。
+2. 进入在线编辑器，把 `worker/src/index.js` 全文粘贴进去，点 Deploy。
+3. 在 Settings → Variables and Secrets 添加 Secret：`DEEPSEEK_API_KEY` = 你的 DeepSeek API Key。
+4. 添加明文变量：`ALLOWED_ORIGINS` = `https://luoshuhen68.github.io,http://localhost:5173`，可选 `DAILY_LIMIT_PER_IP` = `40`。
+5. 记下形如 `https://shici-poet-api.xxx.workers.dev` 的地址。
+
+### 启用
+
+把 [config.ts](src/ai/config.ts) 里的 `AI_ENDPOINT` 换成上一步的地址，重新构建并推送即可。地址里仍带 `<` 时视为未配置，自动走离线模式。
+
+### 命令行部署（本机有 Node 时更省事）
+
+```bash
+cd worker
+npx wrangler login
+npx wrangler secret put DEEPSEEK_API_KEY
+npx wrangler deploy
+```
+
+想要可靠的每日限额，再执行 `npx wrangler kv namespace create RATE`，把返回的 id 填进 `wrangler.toml`。
+
+### 成本与限制
+
+- 单次对谈（约 600 token 输入 / 100 token 输出）成本约 0.001–0.003 元。
+- 默认每个 IP 每天 40 次；问题限 200 字，历史只带最近 6 条，单次回答上限 260 token。
+- 提示词在 Worker 端拼装，前端无法伪造 system 指令；并拦截「忽略以上规则」这类越界指令。
+
+### 对外运营的合规清单
+
+- 域名解析到国内服务器需完成 ICP 备案。
+- 使用已完成生成式 AI 服务备案的模型（DeepSeek、豆包、通义等均已备案）。
+- 界面保留「本对话由 AI 生成」标识（已内置）。
+- 正式公测建议接入内容安全审核 API，并按监管要求留存对话日志 6 个月。
+
